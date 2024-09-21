@@ -19,14 +19,15 @@ cursor.execute('''CREATE TABLE IF NOT EXISTS tecnologias (
                     nombre TEXT,
                     funcion TEXT,
                     funcionamiento TEXT,
-                    costo REAL
+                    costo TEXT
                 )''')
 
 # Datos precargados
 precargadas = [
     ("Hola", "Hola! ¿Cómo estás?"),
-    ("¿Cómo estás?", "Estoy bien, gracias por preguntar. ¿De qué te gustaría hablar? ¿Tienes alguna tecnología en mente? Dime el nombre de la tecnología"),
-    ("Quiero hablar de algo", "¿De qué te gustaría hablar? ¿Tienes alguna tecnología en mente? Dime el nombre de la tecnología")
+    ("¿Cómo estás?", "Estoy bien, gracias por preguntar."),
+    ("Quiero hablar de algo", "¿De qué te gustaría hablar? ¿Tienes alguna tecnología en mente? Dime el nombre de la tecnología"),
+    ("Quiero ver lo almacenado", "Claro! Estas son las tecnologias agregadas:")
 ]
 
 
@@ -78,14 +79,23 @@ def editar_tecnologia(id_tecnologia, campo, nuevo_valor):
     elif campo == "funcionamiento":
         cursor.execute('UPDATE tecnologias SET funcionamiento=? WHERE id=?', (nuevo_valor, id_tecnologia))
     elif campo == "costo":
-        cursor.execute('UPDATE tecnologias SET costo=? WHERE id=?', (float(nuevo_valor), id_tecnologia))
+        cursor.execute('UPDATE tecnologias SET costo=? WHERE id=?',  (nuevo_valor, id_tecnologia))
     conn.commit()
+
+def listar_tecnologias():
+    cursor.execute('SELECT * FROM tecnologias')
+    tecnologias = cursor.fetchall()
+    if tecnologias:
+        for tecnologia in tecnologias:
+            print(f"ID: {tecnologia[0]}\n - Nombre: {tecnologia[1]}\n - Función: {tecnologia[2]}\n - Funcionamiento: {tecnologia[3]}\n - Costo: {tecnologia[4]}\n\n")
+    else:
+        print("No hay tecnologías almacenadas.")
 
 # Chat sencillo con opción de salir
 print("Chatbot: ¡Hola! Si en algún momento quieres salir del chat, escribe 'salir'.")
 print("Chatbot: Para añadir o consultar alguna tecnologia a la base de datos escribe : ´Quiero hablar de algo´ en el chat.")
 print("Chatbot: En caso de querer seguir una conversacion solo preguntame cosas, si no lo se ayudame a añardirlo a la base de datos para futuras conversaciones")
-
+print("Chatbot: Para ver todas las tecnologias en la base de datos escribe : ´Quiero ver lo almacenado´ en el chat.")
 while True:
     user_input = input("Tú: ")
     
@@ -98,18 +108,18 @@ while True:
     
     if respuesta:
         print(f"Chatbot: {respuesta}")
-        if "¿Tienes alguna en mente?" in respuesta:
+        if "¿Tienes alguna tecnología en mente?" in respuesta:
             nombre_tecnologia = input("Tú: ")
             tecnologia = buscar_tecnologia(nombre_tecnologia)
             if tecnologia:
-                print(f"Chatbot: La tecnología '{tecnologia['nombre']}' tiene la siguiente información almacenada:")
+                print(f"  Chatbot: La tecnología '{tecnologia['nombre']}' tiene la siguiente información almacenada:")
                 print(f"  Función: {tecnologia['funcion']}")
                 print(f"  Funcionamiento: {tecnologia['funcionamiento']}")
                 print(f"  Costo aproximado: ${tecnologia['costo']}")
                 
                 # Preguntar si el usuario desea editar la información
-                editar = input("Chatbot: ¿Te gustaría editar alguna información sobre esta tecnología? (sí/no) ").lower()
-                if editar == "sí":
+                editar = input("Chatbot: ¿Te gustaría editar alguna información sobre esta tecnología? (si/no) ").lower()
+                if editar == "si":
                     campo = input("Chatbot: ¿Qué te gustaría editar? (nombre/funcion/funcionamiento/costo) ").lower()
                     nuevo_valor = input(f"Chatbot: Ingresa el nuevo valor para {campo}: ")
                     editar_tecnologia(tecnologia['id'], campo, nuevo_valor)
@@ -121,6 +131,8 @@ while True:
                 costo = input("Chatbot: ¿Cuál es el costo aproximado de esta tecnología? ")
                 agregar_tecnologia(nombre_tecnologia, funcion, funcionamiento, costo)
                 print("Chatbot: Gracias, he almacenado la información de esta tecnología.")
+        elif "Claro! Estas son las tecnologias agregadas:" in respuesta:
+            listar_tecnologias()  # Llama a la función para listar todas las tecnologías
     else:
         print("Chatbot: No tengo una respuesta para eso. ¿Cuál debería ser la respuesta?")
         nueva_respuesta = input("Ingresa la nueva respuesta: ")
